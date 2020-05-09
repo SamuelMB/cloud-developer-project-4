@@ -1,38 +1,22 @@
 import 'source-map-support/register';
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import * as AWS from 'aws-sdk';
 import * as middy from 'middy';
 import { cors } from 'middy/middlewares';
 import { getUserId } from '../utils';
+import { TodoBusiness } from '../businessLogic/todoBusiness';
 
-const docClient = new AWS.DynamoDB.DocumentClient();
-
-const todosTable = process.env.TODOS_TABLE;
-const indexName = process.env.INDEX_NAME;
+const todoBusiness = new TodoBusiness();
 
 const getTodosHandler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   const userId = getUserId(event);
-  const result = await docClient
-    .scan({
-      TableName: todosTable,
-      IndexName: indexName,
-      FilterExpression: 'userId = :userId',
-      ExpressionAttributeValues: {
-        ':userId': userId,
-      },
-    })
-    .promise();
 
-  const items = result.Items;
+  const items = await todoBusiness.getTodos(userId);
 
   return {
     statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
     body: JSON.stringify({ items }),
   };
 };

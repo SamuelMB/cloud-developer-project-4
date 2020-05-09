@@ -5,31 +5,23 @@ import {
   APIGatewayProxyResult,
   APIGatewayProxyHandler,
 } from 'aws-lambda';
-import * as AWS from 'aws-sdk';
+import * as middy from 'middy';
+import { cors } from 'middy/middlewares';
+import { FileBusiness } from '../businessLogic/fileBusiness';
 
-const bucketName = process.env.IMAGES_S3_BUCKET;
-const urlExpiration = process.env.SIGNED_URL_EXPIRATION;
+const fileBusiness = new FileBusiness();
 
-const s3 = new AWS.S3({
-  signatureVersion: 'v4',
-});
-
-export const handler: APIGatewayProxyHandler = async (
+const generateUploadUrlHandler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId;
 
-  const uploadUrl = s3.getSignedUrl('putObject', {
-    Bucket: bucketName,
-    Key: todoId,
-    Expires: Number(urlExpiration),
-  });
-
   return {
     statusCode: 201,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
-    body: JSON.stringify({ uploadUrl }),
+    body: JSON.stringify({ uploadUrl: fileBusiness.getSignedUrl(todoId) }),
   };
 };
+
+export const handler = middy(generateUploadUrlHandler).use(
+  cors({ credentials: true }),
+);
