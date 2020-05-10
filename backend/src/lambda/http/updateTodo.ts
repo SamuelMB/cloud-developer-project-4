@@ -11,6 +11,9 @@ import { cors } from 'middy/middlewares';
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest';
 import { getUserId } from '../utils';
 import { TodoBusiness } from '../businessLogic/todoBusiness';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('updateTodo');
 
 const todoBusiness = new TodoBusiness();
 
@@ -22,6 +25,8 @@ const updateTodoHandler: APIGatewayProxyHandler = async (
   const userId = getUserId(event);
 
   await todoBusiness.updateTodo(todoId, userId, updatedTodo);
+
+  logger.info(`Todo Updated: ${updatedTodo}`);
 
   return {
     statusCode: 204,

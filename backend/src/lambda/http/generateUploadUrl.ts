@@ -8,6 +8,9 @@ import {
 import * as middy from 'middy';
 import { cors } from 'middy/middlewares';
 import { FileBusiness } from '../businessLogic/fileBusiness';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('generateUploadUrl');
 
 const fileBusiness = new FileBusiness();
 
@@ -16,9 +19,13 @@ const generateUploadUrlHandler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId;
 
+  const signedUrl = fileBusiness.getSignedUrl(todoId);
+
+  logger.info(`Generate Upload Url ${signedUrl}`);
+
   return {
     statusCode: 201,
-    body: JSON.stringify({ uploadUrl: fileBusiness.getSignedUrl(todoId) }),
+    body: JSON.stringify({ uploadUrl: signedUrl }),
   };
 };
 

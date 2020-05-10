@@ -4,6 +4,9 @@ import { CreateTodoRequest } from '../../requests/CreateTodoRequest';
 import { v4 as uuidv4 } from 'uuid';
 import { TodoAccess } from '../dataLayer/todoAccess';
 import { TodoUpdate } from '../../models/TodoUpdate';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('fileBusiness');
 
 export class TodoBusiness {
   private readonly docClient: AWS.DynamoDB.DocumentClient;
@@ -22,6 +25,8 @@ export class TodoBusiness {
   ): Promise<TodoItem> {
     const todoId = uuidv4();
 
+    logger.info(`Creating New Todo`);
+
     const newTodo: TodoItem = {
       userId: userId,
       todoId,
@@ -31,15 +36,24 @@ export class TodoBusiness {
       attachmentUrl: `https://${this.bucketName}.s3.amazonaws.com/${todoId}`,
     };
 
-    return await this.todoAccess.createTodo(newTodo);
+    const todoCreated = await this.todoAccess.createTodo(newTodo);
+
+    logger.info(`Todo Created: ${todoCreated}`);
+
+    return todoCreated;
   }
 
   async deleteTodo(todoId: string, userId: string): Promise<void> {
+    logger.info('Deleting Todo');
     await this.todoAccess.deleteTodo(todoId, userId);
+    logger.info(`Todo Deleted: ${todoId}`);
   }
 
   async getTodos(userId: string): Promise<TodoItem[]> {
-    return await this.todoAccess.getTodos(userId);
+    logger.info('Recovering Todos');
+    const todos = await this.todoAccess.getTodos(userId);
+    logger.info(`Todos Recovered: ${todos}`);
+    return todos;
   }
 
   async updateTodo(
@@ -47,6 +61,9 @@ export class TodoBusiness {
     userId: string,
     updatedTodo: TodoUpdate,
   ): Promise<TodoUpdate> {
-    return this.todoAccess.updateTodo(todoId, userId, updatedTodo);
+    logger.info('Updating Todo');
+    const todoUpdated = this.todoAccess.updateTodo(todoId, userId, updatedTodo);
+    logger.info(`Updated Todo: ${todoUpdated}`);
+    return todoUpdated;
   }
 }

@@ -1,5 +1,8 @@
 import * as AWS from 'aws-sdk';
 import { FileAccess } from '../dataLayer/fileAccess';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('fileBusiness');
 
 export class FileBusiness {
   private readonly s3Client;
@@ -13,6 +16,9 @@ export class FileBusiness {
   }
 
   getSignedUrl(todoId: string): string {
-    return this.fileAccess.getSignedUrl(todoId);
+    logger.info('Getting SignedUrl');
+    const signedUrl = this.fileAccess.getSignedUrl(todoId);
+    logger.info(`SignedUrl Recovered: ${signedUrl}`);
+    return signedUrl;
   }
 }
