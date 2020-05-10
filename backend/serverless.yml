@@ -4,7 +4,8 @@ service:
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
-
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
 provider:
   name: aws
   runtime: nodejs12.x
@@ -17,6 +18,36 @@ provider:
     IMAGES_S3_BUCKET: todos-images-smbas-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
 
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Todos API
+        description: Serverless application for Todos CRUD
+    models:
+      - name: CreateTodoRequest
+        contentType: application/json
+        schema:
+          required:
+            - name
+            - dueDate
+          properties:
+            name:
+              type: string
+            dueDate:
+              type: string
+      - name: UpdateTodoRequest
+        contentType: application/json
+        schema:
+          properties:
+            name:
+              type: string
+            dueDate:
+              type: string
+            done:
+              type: boolean
+
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
@@ -28,6 +59,12 @@ functions:
           path: todos
           authorizer: Auth
           cors: true
+          reqValidatorName: 'RequestBodyValidator'
+          documentation:
+            summary: Create
+            description: Create
+            requestModels:
+              'application/json': CreateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action: dynamodb:PutItem
@@ -66,6 +103,12 @@ functions:
           path: todos/{todoId}
           authorizer: Auth
           cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update
+            description: Update
+            requestModels:
+              'application/json': UpdateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action: dynamodb:UpdateItem
@@ -84,6 +127,14 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 resources:
   Resources:
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
