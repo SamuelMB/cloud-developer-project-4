@@ -23,30 +23,15 @@ custom:
     api:
       info:
         version: v1.0.0
-        title: Todos API
-        description: Serverless application for Todos CRUD
+        title: Todo List API
+        description: Serverless application for Todo List API
     models:
       - name: CreateTodoRequest
         contentType: application/json
-        schema:
-          required:
-            - name
-            - dueDate
-          properties:
-            name:
-              type: string
-            dueDate:
-              type: string
+        schema: ${file(models/create-todo-request.json)}
       - name: UpdateTodoRequest
         contentType: application/json
-        schema:
-          properties:
-            name:
-              type: string
-            dueDate:
-              type: string
-            done:
-              type: boolean
+        schema: ${file(models/update-todo-request.json)}
 
 functions:
   Auth:
